@@ -18,38 +18,128 @@ async function init() {
         state.web3 = new Web3(web3Provider);
         state.web3.eth.defaultAccount = state.address;
         state.contract = new state.web3.eth.Contract(await (await fetch("contracts/NFT.json")).json(), addresses.NFT);
-        document.getElementById('metadata').textContent = JSON.stringify({
-            "name": "...",
-            "description": "...",
-            "attributes": [
-                {
-                    "trait_type": "...",
-                    "value": "..."
-                },
-                {
-                    "display_type": "number",
-                    "trait_type": "...",
-                    "value": 0,
-                    "max_value": 0,
-                }, 
-                {
-                    "display_type": "date",
-                    "trait_type": "Date",
-                    "value": (new Date().getTime() / 1000) | 0
-                }
-            ],
-        }, null, '\t');
     } catch (e) {
         console.error(e);
     }
     setLoading(false);
 }
 
+function addLinks(links) {
+    const links_item = document.getElementById("links");
+    links_item.childNodes.forEach(c => links_item.removeChild(c));
+    for (const {label, url} of links) {
+        const div = document.createElement("div");
+        const a = document.createElement("a");
+        a.href = url;
+        a.innerText = label || url;
+        a.target = '_blank';
+        div.appendChild(a);
+        links_item.appendChild(div);
+    }
+}
+
+function createLabelValue(attribute, label, value, class_name) {
+    const label_value = document.createElement("label");
+    label_value.innerText = label;
+    attribute.appendChild(label_value);
+    const input_value = document.createElement("input");
+    input_value.type = value;
+    input_value.className = class_name;
+    attribute.appendChild(input_value);
+}
+
+function addItem() {
+    const attributes = document.getElementById("attributes");
+    const attribute = document.createElement("div");
+    attribute.innerHTML = `
+        <button>remove</button>
+        <label>Type</label>
+        <select>
+            <option value="text">text</option>
+            <option value="number">number</option>
+            <option value="date">date</option>
+        </select>
+        <label>Key</label>
+        <input class="key" type="text">`;
+    const span = document.createElement("span");
+    attribute.appendChild(span);
+    createLabelValue(span, "Value", "text", "value");
+    const select = attribute.getElementsByTagName("select")[0];
+    select.onchange = (ev) => { 
+        const value = ev.target.value;
+        span.innerHTML = "";
+        createLabelValue(span, "Value", value, "value");
+        if (value == 'number') {
+            createLabelValue(span, "Max value", "number", "max_value");
+        };
+    };
+    const button = attribute.getElementsByTagName("button")[0];
+    button.onclick = () => attributes.removeChild(attribute);
+    attributes.appendChild(attribute);
+}
+
+function getElByClass(attribute=document.createElement(), class_name) {
+    for (let i = 0; i < attribute.children.length; i++) {
+        const item = attribute.children[i];
+        if (item.tagName == "SPAN") {
+            for (let j = 0; j < item.children.length; j++) {
+                const sub_item = item.children[j];
+                if (sub_item.className == class_name) {
+                    return sub_item;
+                }
+            }
+        } else {
+            if (item.className == class_name) {
+                return item;
+            }
+        }
+    }
+}
+
+function getFormattedItem(attribute) {
+    const key = getElByClass(attribute, "key").value;
+    const value_element = getElByClass(attribute, "value");
+    const value = value_element.value;
+    const item = {
+        trait_type: key,
+        value,
+    }
+    const type = value_element.type;
+    if (type != "text") {
+        item.display_type = type;
+    }
+    if (type == "number") {
+        const max_value = getElByClass(attribute, "max_value").value;
+        if (max_value.length > 0 && Number.parseFloat(max_value) > Number.parseFloat(value)) {
+            item.max_value = max_value;
+        }
+    } else if (type == "date") {
+        item.value = (new Date(item.value).getTime() / 1000) | 0;
+    }
+    return item;
+}
+
+function getJsonMetadata() {
+    const attributes = document.getElementById("attributes");
+    const metadata = {
+        name: document.getElementById('name').value,
+        attributes: []
+    };
+    for (let i = 0; i < attributes.children.length; i++) {
+        metadata.attributes.push(getFormattedItem(attributes.children[i]));
+    }
+    const description = document.getElementById('description').value;
+    if (description) {
+        metadata.description = description;
+    }
+    return metadata;
+}
+
 async function mint() {
     setLoading(true);
     try {
         const jwt = (await (await (await fetch("/api/web3storage_jwt")).json())).jwt;
-        const metadata = JSON.parse(document.getElementById('metadata').textContent);
+        const metadata = getJsonMetadata();
         if (!state.image && !metadata.image) throw "Insert image url";
         if (!metadata.image) {
             const formImage = new FormData();
@@ -69,9 +159,14 @@ async function mint() {
             method: "eth_sendTransaction",
             params: [{ data: state.contract.methods.mint(metadataLink).encodeABI(), from: state.address, to: state.contract._address }],
         });
-        console.log(metadataLink);
-        console.log(trx);
-        window.open(`https://goerli.etherscan.io/tx/${trx}`, '_blank');
+        addLinks([
+            {
+                label: "transaction",
+                url: `https://goerli.etherscan.io/tx/${trx}`
+            }, {
+                label: "metadata link",
+                url: metadataLink
+            }]);
     } catch (e) {
         alert(e);
         throw e;

@@ -13,13 +13,26 @@
         <h3>Mint NFT</h3>
         <div id='loading'></div>
         <div>
-            <div>
-                <textarea name="metadata" id="metadata" cols="100" rows="20"></textarea>
+            <div id="mainContent" style="display: grid;">
+                <div style="display: grid; margin: 4px;">
+                    <label>Name</label>
+                    <input name="name" id="name" type="text">
+                </div>
+                <div style="display: grid; margin: 4px;">
+                    <label>Description</label>
+                    <textarea name="description" id="description" cols="10" rows="3"></textarea>
+                </div>
+                <div style="display: grid;">
+                    <button onclick="addItem()">add</button>
+                    <div style="display: grid; margin: 4px;" id="attributes">
+                    </div>
+                </div>
             </div>
             <div>
                 <input type="file" name="image" id="image">
                 <button type="submit" onclick="mint()">Submit</button>
             </div>
+            <div id="links"></div>
         </div>
     </div>
     <script src="dist/web3.min.js"></script>

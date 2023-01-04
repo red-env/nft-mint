@@ -33,5 +33,5 @@ app.get("/api/endpoint", (req, res) => {
     res.send({ endpoint: `https://${process.env.NETWORK}.infura.io/v3/${process.env.INFURA_PROJECT_ID}` });
 });
 
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server listening on port http://localhost:${PORT}`));
 

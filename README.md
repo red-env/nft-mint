@@ -20,20 +20,24 @@ npm install -g truffle
 ```
 
 ## before running
-To install app dependencies should be run the command
+To install app dependencies should be run the commands
 ```
 cd contracts
 npm install
 cd ..
 cd server
 npm install
+cd ..
 ```
 then should be created a new file **.env** for each main directory with the same key of *.env_test*. The connection with the nodes of the blockchain is possible without creating a dedicated node passing through [infura](https://infura.io/dashboard) that is able to do as a proxy. After a registration it provides a personal link to each user to access on web3 services. Should be done also a registration to [web3.storage](https://web3.storage/) to upload NFT files related  to image and metadata on IPFS.
+
 *contract .env*
 ```
-INFURA_URL=         <- infura url available on the website
+INFURA_PROJECT_ID=  <- infura id available on the website
 ACCOUNT_ADDRESS=    <- user account address
 PRIVATE_KEY=        <- user account private key
+NFT_NAME=           <- nft collection name
+NFT_SYMBOL=         <- nft collection symbol
 ```
 *server .env*
 ```
@@ -44,10 +48,13 @@ INFURA_PROJECT_ID=  <- infura id available on the website
 ```
 ## deploy and test smart contract
 ```
+cd contracts
 truffle deploy --network goerli
 truffle test --network goerli
+cd ..
 ```
 ## run server
 ```
+cd server
 npm start
 ```
